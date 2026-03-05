@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOIDCRAFT · 品牌设计系统 (Brand Studio)</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* 核心设计系统 - 保持全局统一的高级暗黑风 */
+:root {
+  --bg: #05050a; --bg-panel: rgba(12, 12, 20, 0.6); --bg-card: rgba(20, 20, 30, 0.7);
+  --border: rgba(108, 71, 255, 0.15); --border-md: rgba(108, 71, 255, 0.35); --border-light: rgba(255, 255, 255, 0.1);
+  --accent: #6c47ff; --accent-soft: rgba(108, 71, 255, 0.15);
+  --accent-2: #ff3cac; --accent-3: #00f5c4; 
+  --text: #ffffff; --text-2: #a0a0b8; --text-3: #5a5a78;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Noto Sans SC', sans-serif; font-weight: 300; }
+.grid-bg { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+
+/* 顶部导航 */
+.topbar { height: 56px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; position: relative; }
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; letter-spacing: 0.15em; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+.logo span { color: var(--accent); }
+.top-actions { display: flex; gap: 16px; align-items: center; }
+.btn-ghost { font-family: 'DM Mono', monospace; font-size: 11px; padding: 6px 16px; border-radius: 6px; border: 1px solid var(--border-light); color: var(--text-2); background: transparent; cursor: pointer; transition: all 0.2s; }
+.btn-ghost:hover { color: var(--text); border-color: var(--border-md); background: rgba(255,255,255,0.05); }
+
+/* 主体布局：左侧表单，右侧爆发 */
+.workspace { display: flex; height: calc(100vh - 56px); position: relative; z-index: 1; }
+
+/* 左侧输入区 */
+.sidebar-left { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; backdrop-filter: blur(20px); z-index: 10; flex-shrink: 0; }
+.form-header { padding: 24px 24px 16px; border-bottom: 1px solid var(--border-light); }
+.form-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; margin-bottom: 6px; }
+.form-desc { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+.form-body { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.form-body::-webkit-scrollbar { width: 4px; } .form-body::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 2px; }
+
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; display: flex; justify-content: space-between; }
+.form-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px 14px; font-family: 'Noto Sans SC', sans-serif; font-size: 13px; color: var(--text); outline: none; transition: border 0.2s; }
+.form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-soft); }
+textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.6; }
+.color-picker-row { display: flex; gap: 8px; }
+.color-btn { flex: 1; height: 32px; border-radius: 6px; border: 1px solid var(--border-light); cursor: pointer; transition: transform 0.2s; }
+.color-btn:hover { transform: scale(1.05); border-color: #fff; }
+
+.btn-generate { margin-top: auto; padding: 16px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border: none; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.05em; cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 24px rgba(108,71,255,0.4); display: flex; justify-content: center; align-items: center; gap: 8px; }
+.btn-generate:hover { transform: translateY(-2px); box-shadow: 0 12px 32px var(--glow); filter: brightness(1.1); }
+
+/* 右侧品牌呈现区 (VI Showcase) */
+.brand-showcase { flex: 1; overflow-y: auto; padding: 40px; background: radial-gradient(circle at center, rgba(108,71,255,0.05) 0%, transparent 70%); }
+.brand-showcase::-webkit-scrollbar { width: 6px; } .brand-showcase::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 3px; }
+
+/* 模拟加载动画层 */
+.loading-overlay { position: absolute; inset: 0; background: var(--bg); z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+.loading-overlay.active { display: flex; }
+.spinner { width: 48px; height: 48px; border: 2px solid var(--border-md); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+.loading-text { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent-3); letter-spacing: 0.2em; animation: pulse 2s infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* 品牌呈现网格 */
+.vi-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; max-width: 1200px; margin: 0 auto; animation: fadeUp 0.8s ease backwards; }
+.vi-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 16px; padding: 24px; backdrop-filter: blur(10px); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+.vi-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+
+/* Logo 区域 */
+.vi-logo-area { grid-column: span 12; display: flex; align-items: center; justify-content: center; min-height: 240px; background: #0a0a0f; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden; }
+.vi-logo-area::before { content: ''; position: absolute; width: 300px; height: 300px; background: radial-gradient(circle, var(--accent-soft), transparent 70%); top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+.generated-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 64px; letter-spacing: 0.05em; color: #fff; display: flex; align-items: center; gap: 16px; z-index: 1; }
+.logo-mark { width: 48px; height: 48px; background: linear-gradient(135deg, var(--accent), var(--accent-3)); border-radius: 12px; transform: rotate(45deg); display: flex; align-items: center; justify-content: center; position: relative; }
+.logo-mark::after { content: ''; width: 24px; height: 24px; background: #0a0a0f; border-radius: 4px; position: absolute; }
+
+/* 色彩区域 */
+.vi-colors { grid-column: span 6; }
+.color-palette { display: flex; gap: 12px; height: 100px; margin-bottom: 16px; }
+.color-swatch { flex: 1; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: flex-end; padding: 10px; transition: flex-grow 0.3s; cursor: pointer; }
+.color-swatch:hover { flex-grow: 1.5; }
+.swatch-hex { font-family: 'DM Mono', monospace; font-size: 10px; mix-blend-mode: difference; color: #fff; opacity: 0.8; }
+.swatch-name { font-size: 10px; mix-blend-mode: difference; color: #fff; font-weight: 500; }
+
+/* 字体排版区域 */
+.vi-typo { grid-column: span 6; }
+.typo-display { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border: 1px solid var(--border-light); }
+.typo-row { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light); }
+.typo-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.t-font-name { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent-3); margin-bottom: 8px; }
+.t-h1 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 28px; color: #fff; line-height: 1.2; }
+.t-p { font-family: 'Noto Sans SC', sans-serif; font-weight: 300; font-size: 13px; color: var(--text-2); line-height: 1.6; }
+
+/* 视觉应用 (Mockups) */
+.vi-mockup { grid-column: span 4; padding: 16px; }
+.mockup-img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.05); filter: contrast(1.1) brightness(0.9); transition: transform 0.4s; }
+.vi-mockup:hover .mockup-img { transform: scale(1.03); }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<div class="topbar">
+  <a href="index.html" class="logo">
+    <svg width="18" height="18" viewBox="0 0 28 28" fill="none"><polygon points="14,2 26,8 26,20 14,26 2,20 2,8" stroke="#6c47ff" stroke-width="2" fill="rgba(108,71,255,0.2)"/><circle cx="14" cy="14" r="3" fill="#00f5c4"/></svg>
+    VOID<span>CRAFT</span>
+  </a>
+  <div class="top-actions">
+    <button class="btn-ghost">↓ 导出品牌规范 (PDF)</button>
+    <button class="btn-ghost">打包资产 (ZIP)</button>
+  </div>
+</div>
+
+<div class="workspace">
+  <div class="sidebar-left">
+    <div class="form-header">
+      <h2 class="form-title">品牌生成台</h2>
+      <p class="form-desc">输入基础信息，AI 将基于色彩心理学与排版趋势，实时生成全套品牌视觉资产。</p>
+    </div>
+    <div class="form-body">
+      <div class="form-group">
+        <label class="form-label">品牌名称 <span>Brand Name</span></label>
+        <input type="text" class="form-input" value="NOVA" style="font-family:'Syne'; font-weight:700; font-size:16px;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">所属行业 <span>Industry</span></label>
+        <input type="text" class="form-input" value="未来科技 / AI 硬件">
+      </div>
+      <div class="form-group">
+        <label class="form-label">核心气质设定 <span>Keywords</span></label>
+        <textarea class="form-input">先锋、突破常规、神秘主义、极简流线、赛博高级感</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">色彩偏好 <span>Color Mood</span></label>
+        <div class="color-picker-row">
+          <div class="color-btn" style="background: #6c47ff; border-color:#fff;"></div>
+          <div class="color-btn" style="background: #00f5c4;"></div>
+          <div class="color-btn" style="background: #ff3cac;"></div>
+          <div class="color-btn" style="background: #0f0f1a;"></div>
+          <div class="color-btn" style="background: #ffffff;"></div>
+        </div>
+      </div>
+      <button class="btn-generate" onclick="simulateGeneration()">✦ 觉醒品牌视觉 (Generate VI)</button>
+    </div>
+  </div>
+
+  <div class="brand-showcase" id="showcase">
+    <div class="loading-overlay" id="loader">
+      <div class="spinner"></div>
+      <div class="loading-text">GENERATING VISUAL IDENTITY...</div>
+    </div>
+
+    <div class="vi-grid" id="vi-content">
+      
+      <div class="vi-card vi-logo-area">
+        <div class="vi-label" style="position:absolute; top:24px; left:24px; right:24px;">
+          <span>01 / Primary Logo</span>
+          <span>Clearspace & Grid</span>
+        </div>
+        <div class="generated-logo">
+          <div class="logo-mark"></div>
+          NOVA
+        </div>
+        <div style="position:absolute; bottom:24px; font-family:'DM Mono'; font-size:10px; color:var(--text-3); display:flex; gap:20px;">
+          <span>FONT: SYNE EXTRA BOLD</span>
+          <span>ALIGNMENT: OPTICAL CENTER</span>
+        </div>
+      </div>
+
+      <div class="vi-card vi-colors">
+        <div class="vi-label">02 / Color Palette</div>
+        <div class="color-palette">
+          <div class="color-swatch" style="background: #6C47FF;">
+            <span class="swatch-name">Primary Neon</span><span class="swatch-hex">#6C47FF</span>
+          </div>
+          <div class="color-swatch" style="background: #00F5C4;">
+            <span class="swatch-name">Accent Cyan</span><span class="swatch-hex">#00F5C4</span>
+          </div>
+          <div class="color-swatch" style="background: #0A0A0F;">
+            <span class="swatch-name">Void Black</span><span class="swatch-hex">#0A0A0F</span>
+          </div>
+          <div class="color-swatch" style="background: #EEEEF8;">
+            <span class="swatch-name">Starlight</span><span class="swatch-hex">#EEEEF8</span>
+          </div>
+        </div>
+        <p style="font-size:12px; color:var(--text-2); line-height:1.5;">主色调采用高饱和紫与青色碰撞，营造出“突破常规”的未来科技感；深邃黑作为大面积背景底色，压住浮躁，凸显高级感。</p>
+      </div>
+
+      <div class="vi-card vi-typo">
+        <div class="vi-label">03 / Typography</div>
+        <div class="typo-display">
+          <div class="typo-row">
+            <div class="t-font-name">HEADINGS - SYNE (BOLD / EXTRA BOLD)</div>
+            <div class="t-h1">Defining the<br>Avant-Garde.</div>
+          </div>
+          <div class="typo-row" style="margin-top:16px;">
+            <div class="t-font-name">BODY TEXT - NOTO SANS SC (LIGHT)</div>
+            <div class="t-p">我们拒绝平庸的设计。NOVA 致力于通过算力与美学的结合，为未来的硬件设备注入超现实主义的灵魂。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vi-card vi-mockup">
+        <div class="vi-label">04 / Poster Design</div>
+        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop" class="mockup-img" alt="Poster Mockup">
+        <div style="margin-top:12px; font-family:'DM Mono'; font-size:10px; color:var(--text-3);">KV GENERATED BY FLUX.1.1 PRO</div>
+      </div>
+
+      <div class="vi-card vi-mockup">
+        <div class="vi-label">05 / Product Texture</div>
+        <img src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=800&auto=format&fit=crop" class="mockup-img" alt="Product Mockup">
+        <div style="margin-top:12px; font-family:'DM Mono'; font-size:10px; color:var(--text-3);">MATERIAL: LIQUID CHROME & GLASS</div>
+      </div>
+
+      <div class="vi-card vi-mockup">
+        <div class="vi-label">06 / Social Media</div>
+        <img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800&auto=format&fit=crop" class="mockup-img" alt="Social Media Mockup">
+        <div style="margin-top:12px; font-family:'DM Mono'; font-size:10px; color:var(--text-3);">INSTAGRAM FEED LAYOUT</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // 简单的互动脚本：点击按钮模拟AI计算生成的过程
+  function simulateGeneration() {
+    const loader = document.getElementById('loader');
+    const content = document.getElementById('vi-content');
+    const btn = document.querySelector('.btn-generate');
+    
+    // 隐藏内容，显示加载
+    content.style.opacity = '0';
+    loader.classList.add('active');
+    btn.innerHTML = '计算中 (Computing...)';
+    btn.style.opacity = '0.7';
+    btn.style.pointerEvents = 'none';
+
+    // 模拟2.5秒的生成时间后展示
+    setTimeout(() => {
+      loader.classList.remove('active');
+      content.style.opacity = '1';
+      // 重置动画
+      content.style.animation = 'none';
+      content.offsetHeight; /* trigger reflow */
+      content.style.animation = 'fadeUp 0.8s ease backwards';
+      
+      btn.innerHTML = '✦ 觉醒品牌视觉 (Generate VI)';
+      btn.style.opacity = '1';
+      btn.style.pointerEvents = 'auto';
+    }, 2500);
+  }
+</script>
+</body>
+</html>
