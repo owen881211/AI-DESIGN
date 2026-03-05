@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VOIDCRAFT · 视频生成工作台 (Video Studio)</title>
+<title>VOIDCRAFT · 视频生成工作台 (Omni-Video Studio)</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 /* 核心设计系统 */
@@ -11,7 +11,7 @@
   --bg: #030308; --bg-panel: rgba(10, 10, 15, 0.85); --bg-card: #0f0f1a;
   --border: rgba(108, 71, 255, 0.15); --border-md: rgba(108, 71, 255, 0.35); --border-light: rgba(255, 255, 255, 0.1);
   --accent: #6c47ff; --accent-soft: rgba(108, 71, 255, 0.15);
-  --accent-2: #ff3cac; --accent-3: #00f5c4; 
+  --accent-2: #ff3cac; --accent-3: #00f5c4; --accent-4: #ffbc00;
   --text: #ffffff; --text-2: #a0a0b8; --text-3: #5a5a78;
 }
 
@@ -24,58 +24,96 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .logo span { color: var(--accent); }
 .top-actions { display: flex; gap: 16px; align-items: center; }
 .btn-primary { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; padding: 8px 20px; border-radius: 8px; background: var(--accent); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(108,71,255,0.3); transition: all 0.2s; }
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,71,255,0.5); }
+.btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,71,255,0.5); }
+.btn-primary:disabled { background: var(--text-3); cursor: not-allowed; box-shadow: none; }
 
 /* 主体布局 */
 .workspace { display: flex; height: calc(100vh - 56px); }
 
 /* 左侧控制台：提示词与运镜 */
-.sidebar-left { width: 360px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; }
-.panel-body { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+.sidebar-left { width: 380px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; }
+.panel-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
 .panel-body::-webkit-scrollbar { width: 4px; } .panel-body::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 2px; }
 
-.section-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-.input-box { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; font-family: 'Noto Sans SC', sans-serif; font-size: 13px; color: var(--text); outline: none; transition: border 0.2s; resize: vertical; min-height: 100px; line-height: 1.6; }
+.section-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.input-box { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; font-family: 'Noto Sans SC', sans-serif; font-size: 13px; color: var(--text); outline: none; transition: border 0.2s; resize: vertical; min-height: 80px; line-height: 1.6; }
 .input-box:focus { border-color: var(--accent); }
 
-/* 运镜滑块 (Camera Controls) */
-.camera-controls { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 16px; }
-.ctrl-row { margin-bottom: 16px; }
+/* 全新视频模型矩阵 */
+.model-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.model-opt { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
+.model-opt:hover { border-color: var(--border-md); background: rgba(255,255,255,0.02); }
+.model-opt.selected { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.model-info { display: flex; flex-direction: column; gap: 2px; }
+.model-opt-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--text); }
+.model-opt-meta { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--text-3); }
+.model-badge { font-family: 'DM Mono', monospace; font-size: 8px; padding: 3px 6px; border-radius: 4px; letter-spacing: 0.05em; }
+.badge-ks { background: rgba(255,60,60,0.15); color: #ff5f57; border: 1px solid rgba(255,60,60,0.3); }
+.badge-bd { background: rgba(255,60,172,0.15); color: #ff3cac; border: 1px solid rgba(255,60,172,0.3); }
+.badge-rw { background: rgba(108,71,255,0.15); color: #6c47ff; border: 1px solid rgba(108,71,255,0.3); }
+.badge-gg { background: rgba(0,245,196,0.15); color: #00f5c4; border: 1px solid rgba(0,245,196,0.3); }
+
+/* 首尾帧与运镜 */
+.keyframes-row { display: flex; gap: 10px; }
+.kf-box { flex: 1; aspect-ratio: 16/9; background: var(--bg-card); border: 1px dashed var(--border-md); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; font-size: 10px; color: var(--text-3); font-family: 'DM Mono', monospace; transition: all 0.2s; background-size: cover; background-position: center; }
+.kf-box:hover { border-color: var(--accent); color: var(--accent); background-color: rgba(108,71,255,0.05); }
+
+.camera-controls { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 10px; padding: 14px; }
+.ctrl-row { margin-bottom: 12px; }
 .ctrl-row:last-child { margin-bottom: 0; }
-.ctrl-header { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-2); margin-bottom: 8px; text-transform: uppercase; }
+.ctrl-header { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-2); margin-bottom: 6px; text-transform: uppercase; }
 .ctrl-val { color: var(--accent-3); }
 input[type="range"] { width: 100%; -webkit-appearance: none; height: 2px; background: var(--border-md); outline: none; border-radius: 2px; }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--text); border: 2px solid var(--accent); cursor: pointer; box-shadow: 0 0 10px var(--accent-soft); }
-
-.model-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.model-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); padding: 10px; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-2); cursor: pointer; transition: all 0.2s; text-align: center; }
-.model-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--text); border: 2px solid var(--accent); cursor: pointer; box-shadow: 0 0 10px var(--accent-soft); }
 
 /* 右侧主工作区：播放器与时间轴 */
 .main-area { flex: 1; display: flex; flex-direction: column; background: var(--bg); position: relative; overflow: hidden; }
 
-/* 视频播放器区域 */
-.player-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; }
-.video-wrapper { width: 100%; max-width: 960px; aspect-ratio: 16/9; background: #000; border-radius: 16px; border: 1px solid var(--border-light); position: relative; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
-.video-layer { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9); transition: filter 0.3s; }
-.video-overlay { position: absolute; inset: 0; background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.6) 100%); pointer-events: none; }
-.play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: rgba(108,71,255,0.8); border: none; color: #fff; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); box-shadow: 0 0 30px var(--glow); transition: all 0.2s; z-index: 10; }
+/* 巨幕视频播放器区域 */
+.player-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; position: relative; }
+.video-wrapper { width: 100%; max-width: 960px; aspect-ratio: 16/9; background: #000; border-radius: 12px; border: 1px solid var(--border-light); position: relative; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+.video-layer { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6); transition: filter 0.5s; transform: scale(1); }
+.video-overlay { position: absolute; inset: 0; background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.8) 100%); pointer-events: none; transition: opacity 0.5s; }
+.play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: rgba(108,71,255,0.8); border: none; color: #fff; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); box-shadow: 0 0 30px var(--glow); transition: all 0.2s; z-index: 10; opacity: 0; pointer-events: none; }
 .play-btn:hover { transform: translate(-50%, -50%) scale(1.1); background: var(--accent); }
+.play-btn.visible { opacity: 1; pointer-events: auto; }
 
-/* 时间轴 (Timeline) */
+/* 渲染进度条遮罩 */
+.render-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.render-overlay.active { opacity: 1; pointer-events: auto; }
+.progress-container { width: 60%; max-width: 400px; height: 4px; background: var(--border-md); border-radius: 2px; overflow: hidden; margin-bottom: 16px; }
+.progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-3)); border-radius: 2px; transition: width 0.1s linear; }
+.render-status { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent-3); letter-spacing: 0.1em; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.render-log { font-size: 9px; color: var(--text-3); margin-top: 8px; }
+
+/* 伪视频动画 (Ken Burns Effect) */
+@keyframes videoMotion {
+  0% { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.15) translate(-2%, 2%); } /* 模拟缓慢推镜头+平移 */
+}
+.playing { animation: videoMotion 5s linear forwards; filter: brightness(1) !important; }
+.playing + .video-overlay { opacity: 0.2; }
+
+/* 底部时间轴 (Timeline) */
 .timeline-area { height: 220px; background: var(--bg-panel); border-top: 1px solid var(--border); display: flex; flex-direction: column; }
 .timeline-header { height: 32px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; padding: 0 16px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-3); gap: 16px; }
 .time-ticks { flex: 1; display: flex; justify-content: space-between; background: repeating-linear-gradient(90deg, transparent, transparent 49px, var(--border-light) 50px); }
 .timeline-tracks { flex: 1; padding: 16px; position: relative; overflow-y: auto; }
 .track { height: 40px; background: rgba(255,255,255,0.02); border-radius: 6px; margin-bottom: 8px; position: relative; border: 1px solid rgba(255,255,255,0.05); }
-.clip { position: absolute; height: 100%; background: linear-gradient(90deg, rgba(108,71,255,0.3), rgba(0,245,196,0.3)); border: 1px solid var(--accent); border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-family: 'DM Mono', monospace; font-size: 9px; color: #fff; overflow: hidden; }
+.clip { position: absolute; height: 100%; background: linear-gradient(90deg, rgba(108,71,255,0.3), rgba(0,245,196,0.3)); border: 1px solid var(--accent); border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-family: 'DM Mono', monospace; font-size: 9px; color: #fff; overflow: hidden; opacity: 0.4; transition: opacity 0.5s; }
+.clip.rendered { opacity: 1; }
 .clip img { height: 100%; opacity: 0.5; mix-blend-mode: overlay; position: absolute; left: 0; top: 0; width: 100%; object-fit: cover; }
 .clip span { position: relative; z-index: 2; text-shadow: 0 1px 2px #000; }
 
 /* 播放指针 */
-.playhead { position: absolute; top: 0; bottom: 0; left: 20%; width: 2px; background: var(--accent-2); z-index: 20; box-shadow: 0 0 10px var(--accent-2); }
+.playhead { position: absolute; top: 0; bottom: 0; left: 0%; width: 2px; background: var(--accent-2); z-index: 20; box-shadow: 0 0 10px var(--accent-2); display: none; }
+.playhead.active { display: block; }
 .playhead::before { content: ''; position: absolute; top: 0; left: -4px; width: 10px; height: 10px; background: var(--accent-2); border-radius: 2px; }
 
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg-card);border:1px solid var(--border-md);border-radius:10px;padding:12px 24px;font-family:'Noto Sans SC',sans-serif;font-size:12px;color:#fff;z-index:300;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 20px 60px rgba(0,0,0,0.8)}
+.toast.visible{transform:translateX(-50%) translateY(0)}
+.toast span {color: var(--accent-3); font-weight: bold; margin-right: 8px;}
 </style>
 </head>
 <body>
@@ -86,7 +124,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
     VOID<span>CRAFT</span> <span style="font-size:10px; color:var(--text-3); margin-left:8px; font-family:'DM Mono'; font-weight:400;">/ VIDEO STUDIO</span>
   </a>
   <div class="top-actions">
-    <button class="btn-primary" onclick="generateVideo()">▷ 渲染视频 (Render)</button>
+    <button class="btn-primary" id="renderBtn" onclick="startRender()">▷ 渲染视频 (Render)</button>
   </div>
 </div>
 
@@ -95,46 +133,64 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
     <div class="panel-body">
       
       <div>
-        <div class="section-label">AI 模型引擎 <span>Engine</span></div>
-        <div class="model-selector">
-          <div class="model-btn active">Kling 1.5 Pro</div>
-          <div class="model-btn">Runway Gen-3</div>
+        <div class="section-label">视频模型引擎 (Engine)</div>
+        <div class="model-grid">
+          <div class="model-opt selected" onclick="selectModel(this,'Kling 1.5 Pro')" data-thumb="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1600&auto=format&fit=crop">
+            <div class="model-info">
+              <span class="model-opt-name">可灵 Kling 1.5 Pro</span>
+              <span class="model-opt-meta">顶级物理模拟 · 复杂运动轨迹</span>
+            </div>
+            <div class="model-badge badge-ks">Kuaishou</div>
+          </div>
+          <div class="model-opt" onclick="selectModel(this,'Seedream 2.0')" data-thumb="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=1600&auto=format&fit=crop">
+            <div class="model-info">
+              <span class="model-opt-name">Seedream 2.0</span>
+              <span class="model-opt-meta">极致色彩光影 · 商业广告级</span>
+            </div>
+            <div class="model-badge badge-bd">ByteDance</div>
+          </div>
+          <div class="model-opt" onclick="selectModel(this,'Veo 3')" data-thumb="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1600&auto=format&fit=crop">
+            <div class="model-info">
+              <span class="model-opt-name">Google Veo 3</span>
+              <span class="model-opt-meta">原生声画同步 · 高逼真度多模态</span>
+            </div>
+            <div class="model-badge badge-gg">Google</div>
+          </div>
+          <div class="model-opt" onclick="selectModel(this,'Runway Gen-3')" data-thumb="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=1600&auto=format&fit=crop">
+            <div class="model-info">
+              <span class="model-opt-name">Runway Gen-3</span>
+              <span class="model-opt-meta">好莱坞级质感 · 电影镜头语言</span>
+            </div>
+            <div class="model-badge badge-rw">Runway</div>
+          </div>
         </div>
       </div>
 
       <div>
-        <div class="section-label">动态提示词 <span>Prompt</span></div>
-        <textarea class="input-box">镜头缓缓推进，一朵由液态金属和发光光纤构成的超现实花朵正在破土而出，周围的水银涟漪向外扩散，8K分辨率，电影级光影，极度细腻的材质反射。</textarea>
+        <div class="section-label">动态脚本 (Prompt)</div>
+        <textarea class="input-box">镜头缓缓推进，一朵由液态金属和发光光纤构成的超现实花朵正在破土而出，周围的水银涟漪向外扩散，电影级光影，极度细腻的材质反射。</textarea>
       </div>
 
       <div>
-        <div class="section-label">首尾帧控制 <span>Keyframes</span></div>
-        <div style="display:flex; gap:12px;">
-          <div style="flex:1; aspect-ratio:1; background:var(--bg-card); border:1px dashed var(--border-md); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer; font-size:10px; color:var(--text-3); font-family:'DM Mono';">
-            <span style="font-size:16px; margin-bottom:4px;">+</span>首帧图 (Start)
-          </div>
-          <div style="flex:1; aspect-ratio:1; background:var(--bg-card); border:1px dashed var(--border-md); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer; font-size:10px; color:var(--text-3); font-family:'DM Mono';">
+        <div class="section-label">关键帧约束 (Keyframes)</div>
+        <div class="keyframes-row">
+          <div class="kf-box" id="startFrame" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop'); border-style:solid; border-color:var(--accent);">
+            </div>
+          <div class="kf-box">
             <span style="font-size:16px; margin-bottom:4px;">+</span>尾帧图 (End)
           </div>
         </div>
       </div>
 
       <div class="camera-controls">
-        <div class="section-label" style="margin-bottom:16px;">运镜控制 <span>Camera</span></div>
-        
+        <div class="section-label" style="margin-bottom:12px;">运镜与镜头语言 (Camera)</div>
         <div class="ctrl-row">
           <div class="ctrl-header"><span>Zoom (推拉)</span><span class="ctrl-val" id="val-zoom">1.5</span></div>
           <input type="range" min="-3" max="3" step="0.1" value="1.5" oninput="document.getElementById('val-zoom').innerText=this.value">
         </div>
-        
         <div class="ctrl-row">
           <div class="ctrl-header"><span>Pan X (水平)</span><span class="ctrl-val" id="val-pan">0.0</span></div>
           <input type="range" min="-3" max="3" step="0.1" value="0.0" oninput="document.getElementById('val-pan').innerText=this.value">
-        </div>
-
-        <div class="ctrl-row">
-          <div class="ctrl-header"><span>Tilt Y (垂直)</span><span class="ctrl-val" id="val-tilt">-0.8</span></div>
-          <input type="range" min="-3" max="3" step="0.1" value="-0.8" oninput="document.getElementById('val-tilt').innerText=this.value">
         </div>
       </div>
 
@@ -143,10 +199,21 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 
   <div class="main-area">
     <div class="player-container">
+      
+      <div class="render-overlay" id="renderOverlay">
+        <div class="progress-container">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="render-status">
+          <span id="renderStatusText">INITIALIZING ENGINE...</span>
+          <span class="render-log" id="renderLog">Connecting to cluster...</span>
+        </div>
+      </div>
+
       <div class="video-wrapper">
         <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1600&auto=format&fit=crop" class="video-layer" id="preview-img" alt="Video Preview">
         <div class="video-overlay"></div>
-        <button class="play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+        <button class="play-btn" id="play-btn" onclick="startVideoPlayback()">▶</button>
       </div>
     </div>
 
@@ -160,14 +227,14 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
         <div class="playhead" id="playhead"></div>
         
         <div class="track">
-          <div class="clip" style="left: 0%; width: 100%;">
-            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop" alt="thumb">
-            <span>Video Track 1 [Kling 1.5] - 5s</span>
+          <div class="clip" id="mainClip" style="left: 0%; width: 100%;">
+            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop" id="clipImg" alt="thumb">
+            <span id="clipLabel">Video Track [Kling 1.5 Pro] - Unrendered</span>
           </div>
         </div>
         <div class="track">
-          <div class="clip" style="left: 0%; width: 100%; background: linear-gradient(90deg, rgba(255,60,172,0.2), rgba(255,60,172,0.05)); border-color:var(--accent-2);">
-            <span>Camera Motion: Zoom In + Tilt Up</span>
+          <div class="clip rendered" style="left: 0%; width: 100%; background: linear-gradient(90deg, rgba(255,60,172,0.2), rgba(255,60,172,0.05)); border-color:var(--accent-2);">
+            <span>Camera Motion: Zoom In + Pan</span>
           </div>
         </div>
       </div>
@@ -175,47 +242,130 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-  // 简单的播放动画模拟
-  let isPlaying = false;
-  let playhead = document.getElementById('playhead');
-  let playBtn = document.getElementById('play-btn');
-  let animationId;
-  let pos = 0; // percentage
+  let currentModel = 'Kling 1.5 Pro';
+  let currentThumb = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1600&auto=format&fit=crop';
+  let isRendered = false;
 
-  function togglePlay() {
-    isPlaying = !isPlaying;
-    if (isPlaying) {
-      playBtn.style.opacity = '0';
-      animate();
-    } else {
-      playBtn.style.opacity = '1';
-      playBtn.innerText = '▶';
-      cancelAnimationFrame(animationId);
-    }
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerHTML = msg; t.classList.add('visible');
+    setTimeout(() => t.classList.remove('visible'), 3500);
   }
 
-  function animate() {
-    pos += 0.2;
-    if (pos > 100) pos = 0;
-    playhead.style.left = pos + '%';
-    animationId = requestAnimationFrame(animate);
+  function selectModel(el, modelName) {
+    if(document.getElementById('renderBtn').disabled) return; // 渲染中禁止切换
+    document.querySelectorAll('.model-opt').forEach(m => m.classList.remove('selected'));
+    el.classList.add('selected');
+    currentModel = modelName;
+    currentThumb = el.getAttribute('data-thumb');
+    
+    // 重置状态
+    isRendered = false;
+    document.getElementById('preview-img').src = currentThumb;
+    document.getElementById('preview-img').classList.remove('playing');
+    document.getElementById('play-btn').classList.remove('visible');
+    document.getElementById('mainClip').classList.remove('rendered');
+    document.getElementById('clipLabel').innerText = `Video Track [${currentModel}] - Unrendered`;
+    document.getElementById('clipImg').src = currentThumb;
+    document.getElementById('startFrame').style.backgroundImage = `url('${currentThumb}')`;
+    document.getElementById('playhead').classList.remove('active');
   }
 
-  function generateVideo() {
-    const btn = document.querySelector('.btn-primary');
-    btn.innerText = '⏳ 渲染中 (Rendering...)';
-    btn.style.opacity = '0.7';
+  function startRender() {
+    isRendered = false;
+    const btn = document.getElementById('renderBtn');
+    const overlay = document.getElementById('renderOverlay');
+    const bar = document.getElementById('progressBar');
+    const statusText = document.getElementById('renderStatusText');
+    const logText = document.getElementById('renderLog');
+    
+    // 重置并显示加载界面
+    document.getElementById('preview-img').classList.remove('playing');
+    document.getElementById('play-btn').classList.remove('visible');
+    document.getElementById('playhead').classList.remove('active');
+    
+    btn.disabled = true;
+    btn.innerText = '⏳ 算力分配中...';
+    overlay.classList.add('active');
+    
+    // 模拟渲染进度 (逼真的多阶段加载)
+    let progress = 0;
+    statusText.innerText = `UPLOADING TO [${currentModel.toUpperCase()}] CLUSTER`;
+    
+    const interval = setInterval(() => {
+      progress += Math.random() * 8; // 随机增加进度
+      if(progress > 100) progress = 100;
+      bar.style.width = progress + '%';
+      
+      if(progress > 20 && progress < 50) {
+        statusText.innerText = 'ANALYZING SEMANTICS & PHYSICS';
+        logText.innerText = 'Calculating fluid dynamics and light refraction...';
+      } else if(progress >= 50 && progress < 85) {
+        statusText.innerText = 'GENERATING FRAMES';
+        logText.innerText = 'Applying camera motion: Zoom 1.5, Pan X 0.0...';
+      } else if(progress >= 85) {
+        statusText.innerText = 'FINALIZING ENCODING';
+        logText.innerText = 'Exporting to H.265 / 4K / 60FPS...';
+      }
+
+      if(progress === 100) {
+        clearInterval(interval);
+        setTimeout(completeRender, 500); // 满进度后停顿一下
+      }
+    }, 300);
+  }
+
+  function completeRender() {
+    const btn = document.getElementById('renderBtn');
+    const overlay = document.getElementById('renderOverlay');
+    
+    overlay.classList.remove('active');
+    btn.disabled = false;
+    btn.innerText = '▷ 渲染视频 (Render)';
+    
+    // 更新时间轴状态
+    isRendered = true;
+    document.getElementById('mainClip').classList.add('rendered');
+    document.getElementById('clipLabel').innerText = `Video Track [${currentModel}] - Rendered (5s)`;
+    
+    // 显示播放按钮
+    document.getElementById('play-btn').classList.add('visible');
+    showToast(`<span>✓</span> ${currentModel} 演示视频渲染完成`);
+  }
+
+  // 模拟视频播放 (CSS Ken Burns 运镜特效)
+  function startVideoPlayback() {
+    if(!isRendered) return;
+    
+    const playBtn = document.getElementById('play-btn');
+    const videoLayer = document.getElementById('preview-img');
+    const playhead = document.getElementById('playhead');
+    
+    playBtn.classList.remove('visible');
+    videoLayer.classList.remove('playing');
+    void videoLayer.offsetWidth; // 触发重绘以重启 CSS 动画
+    videoLayer.classList.add('playing');
+    
+    // 时间轴指针动画 (5秒)
+    playhead.classList.add('active');
+    playhead.style.transition = 'none';
+    playhead.style.left = '0%';
+    
     setTimeout(() => {
-      btn.innerText = '✓ 渲染完成';
-      btn.style.background = 'var(--accent-3)';
-      btn.style.color = '#000';
-      setTimeout(() => {
-        btn.innerText = '▷ 渲染视频 (Render)';
-        btn.style.background = 'var(--accent)';
-        btn.style.color = '#fff';
-      }, 3000);
-    }, 2000);
+      playhead.style.transition = 'left 5s linear';
+      playhead.style.left = '100%';
+    }, 50);
+
+    // 播放结束复位
+    setTimeout(() => {
+      videoLayer.classList.remove('playing');
+      playBtn.classList.add('visible');
+      playhead.classList.remove('active');
+      playhead.style.left = '0%';
+    }, 5000);
   }
 </script>
 </body>
